@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="/">Evaluations</a></li>
+                <li class="breadcrumb-item active">Evaluation Details</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <h1><i class="fas fa-file-alt"></i> Resume Evaluation Details</h1>
+        <p class="lead">Powered by Applicon - Automated Resume Evaluation System</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h1 class="card-title" id="job-title">Loading...</h1>
+                <p class="card-subtitle text-muted">
+                    Resume: <span id="resume-name"></span> | 
+                    Date: <span id="evaluation-date"></span>
+                </p>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <h2 id="score-value">0</h2>
+                            <p>Relevance Score</p>
+                            <span id="verdict-badge" class="badge bg-secondary">Verdict</span>
+                        </div>
+                        
+                        <h5 class="mt-4">Actions</h5>
+                        <div class="mb-3">
+                            <button id="send-email-btn" class="btn btn-primary w-100">
+                                <i class="fas fa-envelope"></i> Send Feedback Email
+                            </button>
+                        </div>
+                        
+                        <h5>Missing Elements</h5>
+                        <div id="missing-elements">
+                            <!-- Missing elements will be populated here -->
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        <h5>Feedback</h5>
+                        <div id="feedback-text">
+                            <!-- Feedback will be populated here -->
+                        </div>
+                        
+                        <h5 class="mt-4">Detailed Analysis</h5>
+                        <div id="detailed-analysis">
+                            <!-- Detailed analysis will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        // Get evaluation ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const evaluationId = {{ evaluation_id }};
+        
+        // Fetch evaluation data
+        $.get(`/api/evaluations/${evaluationId}`)
+            .done(function(data) {
+                // Update job title
+                $('#job-title').text(data.job_title || 'Unknown Position');
+                
+                // Update resume name
+                $('#resume-name').text(data.resume_filename || 'Unknown Resume');
+                
+                // Update date
+                if (data.timestamp) {
+                    const date = new Date(data.timestamp);
+                    $('#evaluation-date').text(date.toLocaleDateString());
+                }
+                
+                // Update score
+                $('#score-value').text(Math.round(data.relevance_score || 0));
+                
+                // Update verdict badge
+                const verdict = data.verdict || 'Unknown';
+                let badgeClass = 'bg-secondary';
+                if (verdict === 'High') badgeClass = 'bg-success';
+                else if (verdict === 'Medium') badgeClass = 'bg-warning';
+                else if (verdict === 'Low') badgeClass = 'bg-danger';
+                $('#verdict-badge').removeClass('bg-secondary bg-success bg-warning bg-danger')
+                                  .addClass(badgeClass)
+                                  .text(verdict);
+                
+                // Update feedback
+                if (data.feedback) {
+                    $('#feedback-text').html(`<p>${data.feedback}</p>`);
+                } else {
+                    $('#feedback-text').html('<p>No feedback available.</p>');
+                }
+                
+                // Update missing elements
+                if (data.missing_elements) {
+                    let missingHtml = '';
+                    if (data.missing_elements.must_have_skills && data.missing_elements.must_have_skills.length > 0) {
+                        missingHtml += `<p><strong>Missing Required Skills:</strong> ${data.missing_elements.must_have_skills.join(', ')}</p>`;
+                    }
+                    if (data.missing_elements.good_to_have_skills && data.missing_elements.good_to_have_skills.length > 0) {
+                        missingHtml += `<p><strong>Missing Preferred Skills:</strong> ${data.missing_elements.good_to_have_skills.join(', ')}</p>`;
+                    }
+                    if (data.missing_elements.qualifications && data.missing_elements.qualifications.length > 0) {
+                        missingHtml += `<p><strong>Missing Qualifications:</strong> ${data.missing_elements.qualifications.join(', ')}</p>`;
+                    }
+                    if (missingHtml === '') {
+                        missingHtml = '<p>No missing elements identified.</p>';
+                    }
+                    $('#missing-elements').html(missingHtml);
+                } else {
+                    $('#missing-elements').html('<p>No missing elements data available.</p>');
+                }
+                
+                // Update detailed analysis
+                let analysisHtml = '';
+                if (data.semantic_similarity !== undefined) {
+                    analysisHtml += `<p><strong>Semantic Similarity:</strong> ${(data.semantic_similarity * 100).toFixed(2)}%</p>`;
+                }
+                $('#detailed-analysis').html(analysisHtml || '<p>No detailed analysis available.</p>');
+                
+                // Store evaluation data for email sending
+                window.evaluationData = data;
+            })
+            .fail(function(xhr) {
+                $('#job-title').text('Error Loading Evaluation');
+                $('#feedback-text').html(`<div class="alert alert-danger">Failed to load evaluation data: ${xhr.responseJSON?.error || 'Unknown error'}</div>`);
+            });
+        
+        // Send email button handler
+        $('#send-email-btn').click(function() {
+            if (!window.evaluationData) {
+                alert('Evaluation data not loaded yet. Please wait.');
+                return;
+            }
+            
+            if (!window.evaluationData.email) {
+                alert('No email address found for this candidate.');
+                return;
+            }
+            
+            if (!confirm(`Send feedback email to ${window.evaluationData.email}?`)) {
+                return;
+            }
+            
+            // Disable button and show loading
+            const btn = $(this);
+            btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Sending...');
+            
+            // Send email
+            $.post(`/api/send-email/${evaluationId}`)
+                .done(function(data) {
+                    if (data.success) {
+                        alert('Feedback email sent successfully!');
+                    } else {
+                        alert('Failed to send email: ' + data.message);
+                    }
+                })
+                .fail(function(xhr) {
+                    alert('Error sending email: ' + (xhr.responseJSON?.error || 'Unknown error'));
+                })
+                .always(function() {
+                    // Re-enable button
+                    btn.prop('disabled', false).html('<i class="fas fa-envelope"></i> Send Feedback Email');
+                });
+        });
+    });
+</script>
+{% endblock %}

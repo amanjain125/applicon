@@ -1,0 +1,390 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/">Dashboard</a></li>
+                <li class="breadcrumb-item active">Candidate Comparison</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <h1><i class="fas fa-users"></i> Candidate Comparison Dashboard</h1>
+        <p class="lead">Compare top candidates for the same job role using Applicon</p>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title"><i class="fas fa-filter"></i> Filter Candidates</h5>
+            </div>
+            <div class="card-body">
+                <form id="filter-form">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                <label for="job-title" class="form-label">Job Title</label>
+                                <input type="text" class="form-control" id="job-title" placeholder="Enter job title to compare candidates" value="{{ job_title }}">
+                                <div class="form-text">Start typing to see available job titles</div>
+                                <div id="job-title-suggestions" class="dropdown-menu" style="display: none; position: absolute; z-index: 1000;"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">&nbsp;</label>
+                                <div>
+                                    <button type="submit" class="btn btn-primary w-100">
+                                        <i class="fas fa-search"></i> Find Candidates
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title"><i class="fas fa-info-circle"></i> How to Use</h5>
+            </div>
+            <div class="card-body">
+                <ol>
+                    <li>Enter a job title to compare candidates</li>
+                    <li>View side-by-side comparison of top candidates</li>
+                    <li>Identify common skills and unique strengths</li>
+                    <li>Make informed hiring decisions</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title"><i class="fas fa-chart-bar"></i> Candidate Comparison</h5>
+            </div>
+            <div class="card-body">
+                <div id="comparison-container">
+                    <div id="loading" class="text-center d-none">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Finding candidates for comparison...</p>
+                    </div>
+                    
+                    <div id="no-results" class="text-center d-none">
+                        <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                        <h5>No candidates found</h5>
+                        <p>Enter a job title to find candidates for comparison</p>
+                        <div id="available-jobs" class="mt-3">
+                            <h6>Available Job Titles:</h6>
+                            <div id="job-list" class="d-flex flex-wrap gap-2">
+                                <!-- Job titles will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="comparison-results" class="d-none">
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead class="table-light">
+                                    <tr id="comparison-header">
+                                        <th>Attribute</th>
+                                        <!-- Candidate columns will be added here -->
+                                    </tr>
+                                </thead>
+                                <tbody id="comparison-body">
+                                    <!-- Comparison data will be populated here -->
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <h5><i class="fas fa-lightbulb"></i> Key Insights</h5>
+                            <div id="insights-content">
+                                <!-- Insights will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        // Load available job titles
+        loadAvailableJobTitles();
+        
+        // Handle form submission
+        $('#filter-form').submit(function(e) {
+            e.preventDefault();
+            const jobTitle = $('#job-title').val().trim();
+            if (jobTitle) {
+                loadComparisonData(jobTitle);
+            }
+        });
+        
+        // Job title autocomplete
+        let jobTitles = [];
+        $('#job-title').on('input', function() {
+            const value = $(this).val().toLowerCase();
+            if (value.length > 0) {
+                const suggestions = jobTitles.filter(title => 
+                    title.toLowerCase().includes(value)
+                ).slice(0, 5);
+                
+                if (suggestions.length > 0) {
+                    let suggestionsHtml = '';
+                    suggestions.forEach(title => {
+                        suggestionsHtml += `<a class="dropdown-item" href="#">${title}</a>`;
+                    });
+                    
+                    $('#job-title-suggestions')
+                        .html(suggestionsHtml)
+                        .show();
+                    
+                    // Position the dropdown
+                    const inputOffset = $('#job-title').offset();
+                    const inputHeight = $('#job-title').outerHeight();
+                    $('#job-title-suggestions')
+                        .css({
+                            'top': inputOffset.top + inputHeight,
+                            'left': inputOffset.left,
+                            'width': $('#job-title').outerWidth()
+                        });
+                    
+                    // Handle suggestion clicks
+                    $('#job-title-suggestions .dropdown-item').click(function(e) {
+                        e.preventDefault();
+                        const selectedTitle = $(this).text();
+                        $('#job-title').val(selectedTitle);
+                        $('#job-title-suggestions').hide();
+                        loadComparisonData(selectedTitle);
+                    });
+                } else {
+                    $('#job-title-suggestions').hide();
+                }
+            } else {
+                $('#job-title-suggestions').hide();
+            }
+        });
+        
+        // Hide suggestions when clicking elsewhere
+        $(document).click(function(e) {
+            if (!$(e.target).closest('#job-title, #job-title-suggestions').length) {
+                $('#job-title-suggestions').hide();
+            }
+        });
+        
+        // Load data if job title is provided
+        const initialJobTitle = '{{ job_title }}';
+        if (initialJobTitle) {
+            $('#job-title').val(initialJobTitle);
+            loadComparisonData(initialJobTitle);
+        }
+        
+        function loadAvailableJobTitles() {
+            $.get('/api/job-titles')
+                .done(function(data) {
+                    jobTitles = data.job_titles || [];
+                    displayAvailableJobs(jobTitles);
+                })
+                .fail(function(xhr) {
+                    console.error('Failed to load job titles:', xhr);
+                });
+        }
+        
+        function displayAvailableJobs(jobTitles) {
+            const jobList = $('#job-list');
+            jobList.empty();
+            
+            if (jobTitles && jobTitles.length > 0) {
+                jobTitles.slice(0, 10).forEach(title => {
+                    jobList.append(`
+                        <button class="btn btn-outline-primary btn-sm job-title-btn" type="button">
+                            ${title}
+                        </button>
+                    `);
+                });
+                
+                // Handle job title button clicks
+                $('.job-title-btn').click(function() {
+                    const title = $(this).text();
+                    $('#job-title').val(title);
+                    loadComparisonData(title);
+                });
+            } else {
+                jobList.append('<span class="text-muted">No job titles available yet</span>');
+            }
+        }
+        
+        function loadComparisonData(jobTitle) {
+            // Show loading indicator
+            $('#loading').removeClass('d-none');
+            $('#no-results').addClass('d-none');
+            $('#comparison-results').addClass('d-none');
+            
+            // Fetch comparison data
+            $.get('/api/compare-candidates', { job_title: jobTitle })
+                .done(function(data) {
+                    if (data && data.length > 0) {
+                        displayComparisonData(data);
+                    } else {
+                        showNoResults();
+                        // Refresh available jobs
+                        loadAvailableJobTitles();
+                    }
+                })
+                .fail(function(xhr) {
+                    console.error('Failed to load comparison data:', xhr);
+                    showNoResults();
+                })
+                .always(function() {
+                    $('#loading').addClass('d-none');
+                });
+        }
+        
+        function showNoResults() {
+            $('#no-results').removeClass('d-none');
+            $('#comparison-results').addClass('d-none');
+        }
+        
+        function displayComparisonData(candidates) {
+            // Clear previous data
+            $('#comparison-header').empty();
+            $('#comparison-body').empty();
+            $('#insights-content').empty();
+            
+            // Add header row
+            let headerRow = '<th>Attribute</th>';
+            candidates.forEach(candidate => {
+                headerRow += `<th>${candidate.resume_filename}<br><span class="badge bg-${getVerdictBadgeClass(candidate.verdict)}">${Math.round(candidate.relevance_score)}</span></th>`;
+            });
+            $('#comparison-header').append(headerRow);
+            
+            // Add comparison rows
+            const attributes = [
+                { name: 'Relevance Score', key: 'relevance_score', format: 'score' },
+                { name: 'Verdict', key: 'verdict', format: 'text' },
+                { name: 'Email', key: 'candidate_email', format: 'text' },
+                { name: 'Phone', key: 'candidate_phone', format: 'text' },
+                { name: 'Semantic Similarity', key: 'semantic_similarity', format: 'percentage' }
+            ];
+            
+            attributes.forEach(attr => {
+                let row = `<tr><td><strong>${attr.name}</strong></td>`;
+                candidates.forEach(candidate => {
+                    let value = candidate[attr.key] || 'N/A';
+                    if (attr.format === 'score') {
+                        value = Math.round(value);
+                    } else if (attr.format === 'percentage') {
+                        value = (value * 100).toFixed(1) + '%';
+                    }
+                    row += `<td>${value}</td>`;
+                });
+                row += '</tr>';
+                $('#comparison-body').append(row);
+            });
+            
+            // Add missing elements row
+            let missingRow = '<tr><td><strong>Missing Elements</strong></td>';
+            candidates.forEach(candidate => {
+                const missing = candidate.missing_elements || {};
+                let missingText = '';
+                if (missing.must_have_skills && missing.must_have_skills.length > 0) {
+                    missingText += `<div><small><strong>Required:</strong> ${missing.must_have_skills.slice(0, 3).join(', ')}</small></div>`;
+                }
+                if (missing.good_to_have_skills && missing.good_to_have_skills.length > 0) {
+                    missingText += `<div><small><strong>Preferred:</strong> ${missing.good_to_have_skills.slice(0, 2).join(', ')}</small></div>`;
+                }
+                missingRow += `<td>${missingText || 'None'}</td>`;
+            });
+            missingRow += '</tr>';
+            $('#comparison-body').append(missingRow);
+            
+            // Generate insights
+            generateInsights(candidates);
+            
+            // Show results
+            $('#comparison-results').removeClass('d-none');
+        }
+        
+        function generateInsights(candidates) {
+            let insights = '<div class="row">';
+            
+            // Top candidate
+            const topCandidate = candidates.reduce((prev, current) => 
+                (prev.relevance_score > current.relevance_score) ? prev : current);
+            insights += `
+                <div class="col-md-4">
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h6><i class="fas fa-trophy"></i> Top Candidate</h6>
+                            <p class="mb-1"><strong>${topCandidate.resume_filename}</strong></p>
+                            <p class="mb-0">Score: ${Math.round(topCandidate.relevance_score)}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Common skills
+            const allSkills = candidates.flatMap(c => {
+                const missing = c.missing_elements || {};
+                const skills = [];
+                if (missing.must_have_skills) skills.push(...missing.must_have_skills);
+                if (missing.good_to_have_skills) skills.push(...missing.good_to_have_skills);
+                return skills;
+            });
+            
+            // This is a simplified approach - in a real implementation, you'd analyze actual skills
+            insights += `
+                <div class="col-md-4">
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h6><i class="fas fa-check-circle"></i> Common Skills</h6>
+                            <p class="mb-0">Analysis would show common skills across candidates</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Unique strengths
+            insights += `
+                <div class="col-md-4">
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h6><i class="fas fa-star"></i> Unique Strengths</h6>
+                            <p class="mb-0">Analysis would highlight unique candidate strengths</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            insights += '</div>';
+            $('#insights-content').html(insights);
+        }
+        
+        function getVerdictBadgeClass(verdict) {
+            if (verdict === 'High') return 'success';
+            if (verdict === 'Medium') return 'warning';
+            return 'danger';
+        }
+    });
+</script>
+{% endblock %}

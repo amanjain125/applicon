@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/">Dashboard</a></li>
+                <li class="breadcrumb-item active">About Applicon</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <h1><i class="fas fa-info-circle"></i> About Applicon</h1>
+        <p class="lead">Revolutionizing the recruitment process with AI-powered resume evaluation</p>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title"><i class="fas fa-lightbulb"></i> Our Mission</h5>
+            </div>
+            <div class="card-body">
+                <p>Applicon is an innovative AI-powered platform designed to streamline and enhance the recruitment process by automating resume evaluation. Our mission is to bridge the gap between talented candidates and organizations by providing an efficient, accurate, and unbiased assessment system.</p>
+                
+                <p>In today's competitive job market, both employers and job seekers face significant challenges. Employers are inundated with hundreds of applications for a single position, making it difficult to identify the most suitable candidates efficiently. Meanwhile, job seekers often struggle to understand why their applications are rejected without feedback.</p>
+                
+                <p>Applicon addresses these challenges by leveraging cutting-edge Natural Language Processing (NLP) and Machine Learning technologies to provide:</p>
+                <ul>
+                    <li>Rapid and consistent evaluation of resumes against job descriptions</li>
+                    <li>Actionable feedback to help candidates improve their profiles</li>
+                    <li>Reduced bias in the screening process</li>
+                    <li>Time and cost savings for HR teams</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title"><i class="fas fa-tachometer-alt"></i> Key Features</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled">
+                    <li class="mb-2"><i class="fas fa-check-circle text-success"></i> AI-Powered Analysis</li>
+                    <li class="mb-2"><i class="fas fa-check-circle text-success"></i> Instant Feedback</li>
+                    <li class="mb-2"><i class="fas fa-check-circle text-success"></i> Batch Processing</li>
+                    <li class="mb-2"><i class="fas fa-check-circle text-success"></i> Candidate Comparison</li>
+                    <li class="mb-2"><i class="fas fa-check-circle text-success"></i> Email Notifications</li>
+                    <li class="mb-2"><i class="fas fa-check-circle text-success"></i> Detailed Analytics</li>
+                    <li class="mb-2"><i class="fas fa-check-circle text-success"></i> Customizable Scoring</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title"><i class="fas fa-cogs"></i> How It Works</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 text-center mb-3">
+                        <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 70px; height: 70px;">
+                            <i class="fas fa-upload fa-2x"></i>
+                        </div>
+                        <h6 class="mt-2">Upload Resumes</h6>
+                        <p class="small text-muted">Submit resumes and job descriptions</p>
+                    </div>
+                    <div class="col-md-3 text-center mb-3">
+                        <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 70px; height: 70px;">
+                            <i class="fas fa-brain fa-2x"></i>
+                        </div>
+                        <h6 class="mt-2">AI Analysis</h6>
+                        <p class="small text-muted">Advanced NLP processes content</p>
+                    </div>
+                    <div class="col-md-3 text-center mb-3">
+                        <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 70px; height: 70px;">
+                            <i class="fas fa-calculator fa-2x"></i>
+                        </div>
+                        <h6 class="mt-2">Scoring</h6>
+                        <p class="small text-muted">Relevance scores calculated</p>
+                    </div>
+                    <div class="col-md-3 text-center mb-3">
+                        <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 70px; height: 70px;">
+                            <i class="fas fa-envelope fa-2x"></i>
+                        </div>
+                        <h6 class="mt-2">Feedback</h6>
+                        <p class="small text-muted">Results sent to candidates</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title"><i class="fas fa-users"></i> Meet Our Team</h5>
+            </div>
+            <div class="card-body">
+                <div class="row justify-content-center">
+                    <div class="col-md-4 mb-4">
+                        <div class="team-member text-center">
+                            <img src="{{ url_for('static', filename='images/team-member.jpg') }}" alt="Aman R Jain" class="team-member-img rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
+                            <h5>Aman R Jain</h5>
+                            <p class="text-muted">Developer & Student</p>
+                            <p>Passionate student developer who has successfully built this entire AI-powered resume evaluation platform as a comprehensive project. Dedicated to creating innovative solutions that bridge technology and real-world applications.</p>
+                            <div class="d-flex justify-content-center gap-2">
+                                <a href="#" class="btn btn-outline-primary btn-sm"><i class="fab fa-linkedin-in"></i></a>
+                                <a href="#" class="btn btn-outline-primary btn-sm"><i class="fab fa-github"></i></a>
+                                <a href="#" class="btn btn-outline-primary btn-sm"><i class="fas fa-envelope"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title"><i class="fas fa-handshake"></i> Why Choose Applicon?</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <h6><i class="fas fa-bolt text-warning"></i> Lightning Fast</h6>
+                        <p class="small">Process hundreds of resumes in minutes, not days.</p>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <h6><i class="fas fa-balance-scale text-warning"></i> Unbiased Evaluation</h6>
+                        <p class="small">Remove human bias with consistent AI-powered assessments.</p>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <h6><i class="fas fa-chart-line text-warning"></i> Data-Driven Insights</h6>
+                        <p class="small">Make informed hiring decisions with detailed analytics.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

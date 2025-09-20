@@ -1,0 +1,12 @@
+Data Scientist Position
+
+We are looking for a Data Scientist with experience in Python and machine learning.
+
+Requirements:
+- 2+ years of experience with Python
+- Experience with machine learning frameworks
+- Knowledge of data visualization tools
+
+Nice to have:
+- Experience with Power BI
+- Cloud platform experience

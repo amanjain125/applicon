@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1><i class="fas fa-tachometer-alt"></i> Applicon Dashboard</h1>
+        <p class="lead">Automated Resume Evaluation System</p>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-chart-bar"></i> Total Evaluations</h5>
+                <p class="card-text display-4" id="total-evaluations">0</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-check-circle"></i> High Matches</h5>
+                <p class="card-text display-4" id="high-matches">0</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-warning">
+            <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-exclamation-triangle"></i> Medium Matches</h5>
+                <p class="card-text display-4" id="medium-matches">0</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-danger">
+            <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-times-circle"></i> Low Matches</h5>
+                <p class="card-text display-4" id="low-matches">0</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title"><i class="fas fa-history"></i> Recent Evaluations</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-3">
+                    <div>
+                        <button class="btn btn-sm btn-outline-primary" id="refresh-evaluations">
+                            <i class="fas fa-sync"></i> Refresh
+                        </button>
+                    </div>
+                    <div>
+                        <a href="/batch-upload" class="btn btn-sm btn-success me-2">
+                            <i class="fas fa-copy"></i> Batch Process Resumes
+                        </a>
+                        <a href="/compare" class="btn btn-sm btn-info">
+                            <i class="fas fa-users"></i> Compare Candidates
+                        </a>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-striped" id="evaluations-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Job Title</th>
+                                <th>Resume</th>
+                                <th>Score</th>
+                                <th>Verdict</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Data will be loaded dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        // Load statistics
+        loadStatistics();
+        
+        // Load recent evaluations
+        loadEvaluations();
+        
+        // Add event listener for refresh button
+        $('#refresh-evaluations').click(function() {
+            loadEvaluations();
+        });
+        
+        function loadStatistics() {
+            $.get('/api/statistics')
+                .done(function(data) {
+                    $('#total-evaluations').text(data.total_evaluations);
+                    $('#high-matches').text(data.score_distribution.high);
+                    $('#medium-matches').text(data.score_distribution.medium);
+                    $('#low-matches').text(data.score_distribution.low);
+                })
+                .fail(function() {
+                    console.error('Failed to load statistics');
+                });
+        }
+        
+        function loadEvaluations() {
+            $.get('/api/evaluations')
+                .done(function(data) {
+                    const tbody = $('#evaluations-table tbody');
+                    tbody.empty();
+                    
+                    data.slice(0, 10).forEach(function(evaluation) {
+                        const row = `
+                            <tr>
+                                <td>${evaluation.id}</td>
+                                <td>${evaluation.job_title}</td>
+                                <td>${evaluation.resume_filename}</td>
+                                <td>
+                                    <span class="badge bg-${getScoreBadgeClass(evaluation.relevance_score)}">
+                                        ${evaluation.relevance_score}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-${getVerdictBadgeClass(evaluation.verdict)}">
+                                        ${evaluation.verdict}
+                                    </span>
+                                </td>
+                                <td>${new Date(evaluation.timestamp).toLocaleDateString()}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary view-details" data-id="${evaluation.id}">
+                                        <i class="fas fa-eye"></i> View
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                        tbody.append(row);
+                    });
+                    
+                    // Add event listeners for view buttons
+                    $('.view-details').click(function() {
+                        const id = $(this).data('id');
+                        window.location.href = `/evaluation/${id}`;
+                    });
+                })
+                .fail(function() {
+                    console.error('Failed to load evaluations');
+                });
+        }
+    });
+    
+    function getScoreBadgeClass(score) {
+        if (score >= 80) return 'success';
+        if (score >= 60) return 'warning';
+        return 'danger';
+    }
+    
+    function getVerdictBadgeClass(verdict) {
+        if (verdict === 'High') return 'success';
+        if (verdict === 'Medium') return 'warning';
+        return 'danger';
+    }
+</script>
+{% endblock %}
