@@ -4,7 +4,22 @@ This is an AI-powered system for automatically evaluating resumes against job de
 
 ## Deployment Instructions
 
-### Deploying to Render (Recommended for Public Access)
+### Deploying to Railway (Recommended for Size Constraints)
+
+1. Fork this repository to your GitHub account
+2. Go to [Railway](https://railway.app/) and sign up for a free account
+3. Click "New Project" and select "Deploy from GitHub repo"
+4. Connect your GitHub repository
+5. Railway will auto-detect it's a Python app
+6. In the settings, ensure:
+   - Build Command: `pip install -r requirements.txt`
+   - Start Command: `python app/api/app.py`
+7. Add environment variables:
+   - Key: `PORT`, Value: `8000`
+8. Click "Deploy"
+9. Your app will be live within minutes
+
+### Deploying to Render
 
 1. Fork this repository to your GitHub account
 2. Go to [Render](https://render.com/) and sign up for a free account
@@ -29,6 +44,9 @@ If you want to configure email notifications:
 - `EMAIL_PASSWORD`: App password for your email account
 - `EMAIL_SMTP_SERVER`: SMTP server (e.g., smtp.gmail.com)
 - `EMAIL_SMTP_PORT`: SMTP port (e.g., 587)
+
+For OpenAI feedback generation:
+- `OPENAI_API_KEY`: Your OpenAI API key
 
 ## Local Development
 

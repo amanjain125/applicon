@@ -44,23 +44,17 @@ An AI-powered system for automatically evaluating resumes against job descriptio
 
 ## Deployment (Public Access)
 
-### Deploying to Render (Recommended)
+### Deploying to Railway (Recommended for Size Constraints)
 
 1. Fork this repository to your GitHub account
-2. Go to [Render](https://render.com/) and sign up for a free account
-3. Click "New" and select "Web Service"
+2. Go to [Railway](https://railway.app/) and sign up for a free account
+3. Click "New Project" and select "Deploy from GitHub repo"
 4. Connect your GitHub repository
-5. Configure the service:
-   - Name: `resume-evaluator` (or any name you prefer)
-   - Region: Select the closest region to you
-   - Branch: `main` (or your default branch)
-   - Root Directory: Leave empty
-   - Environment: `Python 3`
-   - Build Command: `pip install -r requirements.txt`
-   - Start Command: `python app/api/app.py`
-6. Click "Create Web Service"
-7. Wait for the deployment to complete (usually takes 5-10 minutes)
-8. Once deployed, you'll get a public URL to access your application
+5. Railway will auto-detect it's a Python app
+6. Add environment variables:
+   - Key: `PORT`, Value: `8000`
+7. Click "Deploy"
+8. Your app will be live within minutes
 
 For detailed deployment instructions, see [DEPLOYMENT.md](DEPLOYMENT.md).
 

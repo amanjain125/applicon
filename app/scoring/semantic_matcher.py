@@ -1,17 +1,20 @@
-from sentence_transformers import SentenceTransformer
 import numpy as np
+from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from typing import List, Dict, Tuple
 import openai
 import os
 
 class SemanticMatcher:
-    """Perform semantic matching between resume and job description using embeddings"""
+    """Perform semantic matching between resume and job description using TF-IDF"""
     
     def __init__(self):
-        # Initialize the sentence transformer model
-        # Using a lightweight model for efficiency
-        self.model = SentenceTransformer('all-MiniLM-L6-v2')
+        # Initialize TF-IDF vectorizer instead of sentence transformer
+        self.vectorizer = TfidfVectorizer(
+            max_features=5000,
+            stop_words='english',
+            ngram_range=(1, 2)
+        )
         
         # Try to get OpenAI API key from environment
         self.openai_api_key = os.getenv('OPENAI_API_KEY')
@@ -19,14 +22,13 @@ class SemanticMatcher:
             openai.api_key = self.openai_api_key
     
     def calculate_semantic_similarity(self, resume_data: Dict, jd_data: Dict) -> Dict[str, float]:
-        """Calculate semantic similarity between resume and job description"""
+        """Calculate semantic similarity between resume and job description using TF-IDF"""
         
-        # Get embeddings for resume and job description
-        resume_embedding = self._get_resume_embedding(resume_data)
-        jd_embedding = self._get_jd_embedding(jd_data)
+        # Get TF-IDF vectors for resume and job description
+        resume_vector, jd_vector = self._get_tfidf_vectors(resume_data, jd_data)
         
         # Calculate cosine similarity
-        similarity = cosine_similarity([resume_embedding], [jd_embedding])[0][0]
+        similarity = cosine_similarity(resume_vector, jd_vector)[0][0]
         
         # Get section-wise similarities
         section_similarities = self._get_section_similarities(resume_data, jd_data)
@@ -36,21 +38,22 @@ class SemanticMatcher:
             "section_similarities": section_similarities
         }
     
-    def _get_resume_embedding(self, resume_data: Dict) -> np.ndarray:
-        """Get embedding for resume text"""
+    def _get_tfidf_vectors(self, resume_data: Dict, jd_data: Dict) -> Tuple[np.ndarray, np.ndarray]:
+        """Get TF-IDF vectors for resume and job description"""
         resume_text = resume_data.get("text", "")
+        jd_text = jd_data.get("text", "")
+        
         # Limit text length to prevent memory issues
         if len(resume_text) > 5000:
             resume_text = resume_text[:5000]
-        return self.model.encode(resume_text)
-    
-    def _get_jd_embedding(self, jd_data: Dict) -> np.ndarray:
-        """Get embedding for job description text"""
-        jd_text = jd_data.get("text", "")
-        # Limit text length to prevent memory issues
         if len(jd_text) > 5000:
             jd_text = jd_text[:5000]
-        return self.model.encode(jd_text)
+            
+        # Fit vectorizer and transform texts
+        texts = [resume_text, jd_text]
+        tfidf_matrix = self.vectorizer.fit_transform(texts)
+        
+        return tfidf_matrix[0], tfidf_matrix[1]
     
     def _get_section_similarities(self, resume_data: Dict, jd_data: Dict) -> Dict[str, float]:
         """Calculate similarity for key sections"""
@@ -58,25 +61,30 @@ class SemanticMatcher:
         
         sections = ["experience", "skills", "education", "projects"]
         
+        # Get job description vector once
+        jd_text = jd_data.get("text", "")
+        if len(jd_text) > 1000:
+            jd_text = jd_text[:1000]
+        jd_vector = self.vectorizer.fit_transform([jd_text])
+        
         for section in sections:
             resume_section = resume_data.get("sections", {}).get(section, "")
-            jd_section = ""  # In a real implementation, you might extract specific section from JD
             
             if resume_section:
-                # For demo purposes, we'll compare resume sections with entire JD
-                # In a production system, you'd extract corresponding sections from JD
-                jd_text = jd_data.get("text", "")
-                
+                # Limit section length
                 if len(resume_section) > 1000:
                     resume_section = resume_section[:1000]
-                if len(jd_text) > 1000:
-                    jd_text = jd_text[:1000]
                 
-                if resume_section and jd_text:
-                    resume_emb = self.model.encode(resume_section)
-                    jd_emb = self.model.encode(jd_text)
-                    similarity = cosine_similarity([resume_emb], [jd_emb])[0][0]
-                    similarities[section] = float(similarity)
+                if resume_section:
+                    # Transform both texts using the same vectorizer
+                    try:
+                        resume_vector = self.vectorizer.transform([resume_section])
+                        jd_vector = self.vectorizer.transform([jd_text])
+                        similarity = cosine_similarity(resume_vector, jd_vector)[0][0]
+                        similarities[section] = float(similarity)
+                    except:
+                        # If vectorizer fails, use a default value
+                        similarities[section] = 0.5
         
         return similarities
     

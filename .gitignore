@@ -144,3 +144,4 @@ evaluations.db
 .idea/
 *.swp
 *.swo
+.vercel
