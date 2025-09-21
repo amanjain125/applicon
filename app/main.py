@@ -1,5 +1,10 @@
 import nltk
 import ssl
+import sys
+import os
+
+# Add the app directory to the Python path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'app'))
 
 # Try to download required NLTK data
 try:
@@ -17,13 +22,13 @@ try:
 except Exception as e:
     print(f"Warning: Failed to download NLTK data: {e}")
 
-from parser.resume_parser import ResumeParser
-from parser.jd_parser import JdParser
-from scoring.relevance_scorer import RelevanceScorer
-from scoring.semantic_matcher import SemanticMatcher
-from models.database import EvaluationDatabase
-from services.email_service import EmailService
-import os
+# Use relative imports
+from app.parser.resume_parser import ResumeParser
+from app.parser.jd_parser import JdParser
+from app.scoring.relevance_scorer import RelevanceScorer
+from app.scoring.semantic_matcher import SemanticMatcher
+from app.models.database import EvaluationDatabase
+from app.services.email_service import EmailService
 from typing import Dict, List
 
 class ResumeEvaluator:

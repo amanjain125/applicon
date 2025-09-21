@@ -2,10 +2,11 @@ import sys
 import os
 # Add the parent directory to the Python path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
+from app.main import ResumeEvaluator
 from flask import Flask, request, jsonify, render_template, send_file
 import json
-from main import ResumeEvaluator
 from werkzeug.utils import secure_filename
 import traceback
 
