@@ -2,7 +2,7 @@ import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from typing import List, Dict, Tuple
-import openai
+import google.generativeai as genai
 import os
 
 class SemanticMatcher:
@@ -16,10 +16,10 @@ class SemanticMatcher:
             ngram_range=(1, 2)
         )
         
-        # Try to get OpenAI API key from environment
-        self.openai_api_key = os.getenv('OPENAI_API_KEY')
-        if self.openai_api_key:
-            openai.api_key = self.openai_api_key
+        # Try to get Google API key from environment
+        self.google_api_key = os.getenv('GOOGLE_API_KEY')
+        if self.google_api_key:
+            genai.configure(api_key=self.google_api_key)
     
     def calculate_semantic_similarity(self, resume_data: Dict, jd_data: Dict) -> Dict[str, float]:
         """Calculate semantic similarity between resume and job description using TF-IDF"""
@@ -90,20 +90,20 @@ class SemanticMatcher:
     
     def get_improved_feedback(self, resume_data: Dict, jd_data: Dict) -> str:
         """Generate improved feedback using semantic understanding"""
-        # If OpenAI API key is available, use GPT for feedback generation
-        if self.openai_api_key:
+        # If Google API key is available, use Gemini for feedback generation
+        if self.google_api_key:
             try:
-                return self._generate_gpt_feedback(resume_data, jd_data)
+                return self._generate_gemini_feedback(resume_data, jd_data)
             except Exception as e:
-                print(f"Failed to generate GPT feedback: {e}")
+                print(f"Failed to generate Gemini feedback: {e}")
                 # Fall back to rule-based feedback
                 return self._generate_rule_based_feedback(resume_data, jd_data)
         else:
             # Use rule-based feedback generation
             return self._generate_rule_based_feedback(resume_data, jd_data)
     
-    def _generate_gpt_feedback(self, resume_data: Dict, jd_data: Dict) -> str:
-        """Generate feedback using OpenAI GPT"""
+    def _generate_gemini_feedback(self, resume_data: Dict, jd_data: Dict) -> str:
+        """Generate feedback using Google's Gemini"""
         resume_text = resume_data.get("text", "")[:2000]  # Limit length
         jd_text = jd_data.get("text", "")[:2000]  # Limit length
         
@@ -123,14 +123,11 @@ class SemanticMatcher:
         3. Any sections that are particularly strong
         """
         
-        response = openai.Completion.create(
-            engine="text-davinci-003",
-            prompt=prompt,
-            max_tokens=300,
-            temperature=0.7
-        )
+        # Use the Gemini model
+        model = genai.GenerativeModel('gemini-pro')
+        response = model.generate_content(prompt)
         
-        return response.choices[0].text.strip()
+        return response.text.strip()
     
     def _generate_rule_based_feedback(self, resume_data: Dict, jd_data: Dict) -> str:
         """Generate feedback using rule-based approach"""

@@ -3,12 +3,15 @@ import ssl
 import sys
 import os
 
-# Add the app directory to the Python path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'app'))
+# Add the current directory to the Python path
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_dir)
+sys.path.insert(0, current_dir)
+sys.path.insert(0, parent_dir)
 
 # Try to download required NLTK data
 try:
-    _create_unverified_https_context = ssl._create_unverified_context
+    _create_unverified_https_context = ssl._create_unverified_https_context
 except AttributeError:
     pass
 else:
@@ -22,13 +25,28 @@ try:
 except Exception as e:
     print(f"Warning: Failed to download NLTK data: {e}")
 
-# Use relative imports
-from app.parser.resume_parser import ResumeParser
-from app.parser.jd_parser import JdParser
-from app.scoring.relevance_scorer import RelevanceScorer
-from app.scoring.semantic_matcher import SemanticMatcher
-from app.models.database import EvaluationDatabase
-from app.services.email_service import EmailService
+# Use relative imports with explicit module paths
+try:
+    from app.parser.resume_parser import ResumeParser
+    from app.parser.jd_parser import JdParser
+    from app.scoring.relevance_scorer import RelevanceScorer
+    from app.scoring.semantic_matcher import SemanticMatcher
+    from app.models.database import EvaluationDatabase
+    from app.services.email_service import EmailService
+except ImportError as e:
+    print(f"Error importing modules: {e}")
+    # Try alternative import paths
+    try:
+        from parser.resume_parser import ResumeParser
+        from parser.jd_parser import JdParser
+        from scoring.relevance_scorer import RelevanceScorer
+        from scoring.semantic_matcher import SemanticMatcher
+        from models.database import EvaluationDatabase
+        from services.email_service import EmailService
+    except ImportError as e2:
+        print(f"Failed to import modules with both methods: {e2}")
+        raise
+
 from typing import Dict, List
 
 class ResumeEvaluator:

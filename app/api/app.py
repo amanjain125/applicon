@@ -263,6 +263,7 @@ def send_evaluation_email(evaluation_id):
         return jsonify({'error': f'Failed to send email: {str(e)}'}), 500
 
 if __name__ == '__main__':
-    # Use the PORT environment variable if provided (for Render/Heroku), otherwise default to 5000
+    # Use the PORT environment variable if provided (for Railway/Render/Heroku), otherwise default to 5000
     port = int(os.environ.get('PORT', 5000))
+    print(f"Starting server on port {port}")
     app.run(debug=False, host='0.0.0.0', port=port)
